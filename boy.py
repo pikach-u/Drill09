@@ -40,7 +40,7 @@ class Idle:
             boy.action = 3
         boy.dir = 0
         boy.frame = 0
-        boy.start_time = get_time() #게임을 시작했을 때를 0초로, get time이 호출될 때까지의 경과시간을 가져오는 함수
+        boy.start_time = get_time()
         print('Idle Enter')
 
     @staticmethod
@@ -61,7 +61,7 @@ class Run:
 
     @staticmethod
     def enter(boy, e):
-        if right_down(e) or left_up(e) : # right running
+        if right_down(e) or left_up(e): # right running
             boy.dir, boy.action = 1, 1
         elif left_down(e) or right_up(e): # left running
             boy.dir, boy.action = -1, 0
@@ -74,6 +74,11 @@ class Run:
     def do(boy):  # frame value change
         boy.frame = (boy.frame + 1) % 8
         boy.x += boy.dir * 5
+
+        if boy.x >= 780:
+            boy.x = 780
+        elif boy.x <= 20:
+            boy.x = 20
         pass
 
     @staticmethod
@@ -82,16 +87,14 @@ class Run:
 
 
 class AutoRun:
+
     @staticmethod
     def enter(boy, e):
         if auto_run_down(e) or auto_run_up(e):  # right running
-            boy.dir, boy.action = 1, 1
-        # elif boy.x > 600:  # left running
-        #     boy.x = 600
-        #     boy.dir, boy.action = -1, 0
-        # elif boy.x < 0:  # left running
-        #     boy.x = 0
-        #     boy.dir, boy.action = 1, 1
+            if boy.dir == 0 or boy.dir == 1:
+                boy.dir, boy.action = 1, 1
+            elif boy.dir == -1:
+                boy.dir, boy.action = -1, 0
 
         print('AutoRun Enter')
 
@@ -103,13 +106,14 @@ class AutoRun:
     @staticmethod
     def do(boy):  # frame value change
         print('AutoRun Do')
-        boy.frame = (boy.frame + 1) % 8
-        boy.x += boy.dir * 5
 
-        if boy.x > 800:
-            boy.x = 800
+        boy.frame = (boy.frame + 1) % 8
+        boy.x += boy.dir * 20
+
+        if boy.x >= 700:
+            boy.x = 700
             boy.dir, boy.action = -1, 0
-        elif boy.x < 0:
+        elif boy.x <= 0:
             boy.x = 0
             boy.dir, boy.action = 1, 1
 
@@ -119,7 +123,7 @@ class AutoRun:
 
     @staticmethod
     def draw(boy):
-        boy.image.clip_draw(boy.frame * 100, boy.action * 100, 100, 100, boy.x, boy.y)
+        boy.image.clip_draw(boy.frame * 100, boy.action * 100, 100, 100, boy.x + 60, boy.y + 60, 300, 300)
         print('AutoRun Draw')
 
 
