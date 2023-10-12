@@ -20,10 +20,13 @@ def left_down(e):
 def left_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
 
-def time_out(e):
-    return e[0] == 'TIME_OUT'
+def auto_run_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == 97
 
-def time_out_5(e):
+def auto_run_up(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == 97
+
+def time_out(e):
     return e[0] == 'TIME_OUT' and e[1] == 5.0
 
 
@@ -47,38 +50,12 @@ class Idle:
     @staticmethod
     def do(boy): #frame value change
         boy.frame = (boy.frame + 1) % 8
-        if get_time() - boy.start_time > 3:
-            boy.state_machine.handle_event(('TIME_OUT', 0))
         print('Idle Do')
 
     @staticmethod
     def draw(boy):
         boy.image.clip_draw(boy.frame*100, boy.action*100, 100, 100, boy.x, boy.y)
 
-class Sleep:
-
-    @staticmethod
-    def enter(boy, e):
-        boy.frame = 0
-        print('눕다')
-
-    @staticmethod
-    def exit(boy, e):
-        print('일어서기')
-
-    @staticmethod
-    def do(boy):  # frame value change
-        boy.frame = (boy.frame + 1) % 8
-        print('드르렁')
-
-    @staticmethod
-    def draw(boy):
-        if boy.action == 2:
-            boy.image.clip_composite_draw(boy.frame * 100, boy.action * 100, 100, 100,
-                                      -math.pi / 2, '', boy.x - 25, boy.y - 25, 100, 100)
-        else:
-            boy.image.clip_composite_draw(boy.frame * 100, boy.action * 100, 100, 100,
-                                          math.pi / 2, '', boy.x - 25, boy.y - 25, 100, 100)
 
 class Run:
 
@@ -104,14 +81,57 @@ class Run:
         boy.image.clip_draw(boy.frame * 100, boy.action * 100, 100, 100, boy.x, boy.y)
 
 
+class AutoRun:
+    @staticmethod
+    def enter(boy, e):
+        if auto_run_down(e) or auto_run_up(e):  # right running
+            boy.dir, boy.action = 1, 1
+        # elif boy.x > 600:  # left running
+        #     boy.x = 600
+        #     boy.dir, boy.action = -1, 0
+        # elif boy.x < 0:  # left running
+        #     boy.x = 0
+        #     boy.dir, boy.action = 1, 1
+
+        print('AutoRun Enter')
+
+    @staticmethod
+    def exit(boy, e):
+        print('AutoRun Exit')
+        pass
+
+    @staticmethod
+    def do(boy):  # frame value change
+        print('AutoRun Do')
+        boy.frame = (boy.frame + 1) % 8
+        boy.x += boy.dir * 5
+
+        if boy.x > 800:
+            boy.x = 800
+            boy.dir, boy.action = -1, 0
+        elif boy.x < 0:
+            boy.x = 0
+            boy.dir, boy.action = 1, 1
+
+        if get_time() - boy.start_time > 5: #Idle
+            boy.state_machine.handle_event(('TIME_OUT', 5))
+        pass
+
+    @staticmethod
+    def draw(boy):
+        boy.image.clip_draw(boy.frame * 100, boy.action * 100, 100, 100, boy.x, boy.y)
+        print('AutoRun Draw')
+
+
+
 class StateMachine:
     def __init__(self, boy):
         self.boy = boy
         self.cur_state = Idle
         self.table = { #상태 테이블
-            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep},
-            Sleep: {right_down: Run, left_down: Run, left_up: Run, right_up: Run,space_down: Idle},
-            Run: {right_down: Idle, left_down: Idle, left_up: Idle, right_up: Idle}
+            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, auto_run_down: AutoRun, auto_run_up: AutoRun},
+            Run: {right_down: Idle, left_down: Idle, left_up: Idle, right_up: Idle},
+            AutoRun: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Idle}
         }
 
     def start(self):
